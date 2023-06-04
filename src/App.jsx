@@ -7,6 +7,7 @@ const intInRange = (min, max) =>
 
 const TEXT = 'MPQ';
 const LINE_HEIGHT = 0.8;
+const R = -15;
 const I = () => {
     const [stable, setStable] = useState(false);
     const [content, setContent] = useState(TEXT);
@@ -14,10 +15,21 @@ const I = () => {
     const { ref, width: elWidth } = useElementSize();
 
     useLayoutEffect(() => {
-        if (!elWidth || !windowWidth) return;
-        if (elWidth < windowWidth) setContent((prev) => prev.concat(TEXT));
-        else setStable(true);
-    }, [windowWidth, elWidth]);
+        if (!elWidth) return;
+        const { top, height } = ref.current.getBoundingClientRect();
+        const y = top + height;
+        const topIntersectH = Math.ceil(
+            y / Math.cos((90 + R) * (Math.PI / 180))
+        );
+        const rightIntersectH = Math.ceil(
+            windowWidth / Math.cos(R * (Math.PI / 180))
+        );
+        const h = Math.min(topIntersectH, rightIntersectH);
+        if (elWidth < h) {
+            setStable(false);
+            setContent((prev) => prev.concat(TEXT));
+        } else setStable(true);
+    }, [windowWidth, elWidth, ref]);
 
     const { size, fontFamily } = useMemo(() => {
         const multiplier = intInRange(2, 8);
@@ -41,7 +53,7 @@ const I = () => {
             lineHeight: LINE_HEIGHT,
         },
         className:
-            'text-web-red uppercase font-bold italic transition-opacity whitespace-nowrap'
+            'text-web-red uppercase font-bold  transition-opacity whitespace-nowrap tracking-tighter'
                 .concat(' ', size)
                 .concat(' ', fontFamily)
                 .concat(' ', stable ? 'opacity-100' : 'opacity-0'),
@@ -64,10 +76,17 @@ const I = () => {
             //     delay: i * 0.5,
             // },
         },
+        // transformTemplate: (_, s) => s.concat(` rotateZ(${R}deg)`),
     };
 
     return (
-        <div className="flex justify-start">
+        <div
+            className="flex justify-start"
+            style={{
+                transform: `rotate(${R}deg)`,
+                transformOrigin: '0 100%',
+            }}
+        >
             <motion.div ref={ref} {...props}>
                 {content}
             </motion.div>
@@ -78,12 +97,15 @@ const I = () => {
 
 const L = () => {
     const [multiplier, setMultiplier] = useState(10);
-    const { height: windowHeight } = useViewportSize();
+    const { height: windowHeight, width: windowWidth } = useViewportSize();
     const { ref, height: listHeight } = useElementSize();
 
     useLayoutEffect(() => {
-        if (listHeight - 48 < windowHeight) setMultiplier((prev) => prev + 1);
-    }, [listHeight, windowHeight]);
+        const t = windowWidth * Math.tan(-R * (Math.PI / 180));
+        const requiredHeight = windowHeight + t;
+        console.log(t, requiredHeight, listHeight);
+        if (listHeight < requiredHeight) setMultiplier((prev) => prev + 1);
+    }, [listHeight, windowHeight, windowWidth]);
 
     return (
         <div ref={ref}>
@@ -98,7 +120,7 @@ const Enter = () => {
     return (
         <div className="relative bg-white w-24 h-24 rounded-full shadow-2xl border-4 border-web-blue">
             <a
-                href="/"
+                href="https://mpq.dev"
                 className="absolute inset-0 flex items-center justify-center font-bold uppercase text-web-blue"
             >
                 Enter
@@ -138,7 +160,7 @@ const App = () => {
     const [k, setK] = useState(0);
     return (
         <div key={k}>
-            <div className="fixed -inset-6">
+            <div className="fixed inset-0">
                 <L />
             </div>
             <div className="fixed inset-2 flex justify-between items-end">
