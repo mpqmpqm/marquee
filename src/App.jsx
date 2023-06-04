@@ -53,7 +53,7 @@ const I = () => {
             lineHeight: LINE_HEIGHT,
         },
         className:
-            'text-web-red uppercase font-bold  transition-opacity whitespace-nowrap tracking-tighter'
+            'text-web-red uppercase font-bold italic transition-opacity whitespace-nowrap tracking-tighter'
                 .concat(' ', size)
                 .concat(' ', fontFamily)
                 .concat(' ', stable ? 'opacity-100' : 'opacity-0'),
@@ -61,7 +61,7 @@ const I = () => {
             initial: {},
             stable: { x },
         },
-        animate,
+        animate: stable ? 'stable' : undefined,
         transition: {
             x: {
                 duration,
@@ -86,6 +86,7 @@ const I = () => {
                 transform: `rotate(${R}deg)`,
                 transformOrigin: '0 100%',
             }}
+            key={content}
         >
             <motion.div ref={ref} {...props}>
                 {content}
@@ -103,7 +104,6 @@ const L = () => {
     useLayoutEffect(() => {
         const t = windowWidth * Math.tan(-R * (Math.PI / 180));
         const requiredHeight = windowHeight + t;
-        console.log(t, requiredHeight, listHeight);
         if (listHeight < requiredHeight) setMultiplier((prev) => prev + 1);
     }, [listHeight, windowHeight, windowWidth]);
 
