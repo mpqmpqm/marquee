@@ -37,7 +37,7 @@ const I = ({ text }) => {
     }, []);
 
     const { duration, x } = useMemo(() => {
-        const duration = intInRange(20, 40);
+        const duration = intInRange(15, 30);
         const x = [0, -elWidth];
         if (Math.random() > 0.5) x.reverse();
 
