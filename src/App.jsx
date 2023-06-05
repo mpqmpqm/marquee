@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useViewportSize, useElementSize } from '@mantine/hooks';
-import { startTransition, useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 
 const intInRange = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -149,9 +149,7 @@ const App = () => {
                     type="text"
                     className="w-64 h-16 px-2 py-0 text-xl border-4 rounded-md border-web-blue"
                     value={text}
-                    onChange={(e) =>
-                        startTransition(() => setText(e.target.value))
-                    }
+                    onChange={(e) => setText(e.target.value)}
                     onBlur={() => {
                         if (window.innerHeight < windowHeight)
                             requestAnimationFrame(() => setK((k) => k + 1));
