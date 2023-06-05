@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion';
 import { useViewportSize, useElementSize } from '@mantine/hooks';
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { startTransition, useLayoutEffect, useMemo, useState } from 'react';
 
 const intInRange = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
 
+const degreeToRadian = (degrees) => degrees * (Math.PI / 180);
+
 const TEXT = 'MPQ';
 const LINE_HEIGHT = 0.8;
 const R = -15;
-const I = () => {
+const I = ({ text }) => {
     const [stable, setStable] = useState(false);
-    const [content, setContent] = useState(TEXT);
+    const [content, setContent] = useState(text);
     const { width: windowWidth } = useViewportSize();
     const { ref, width: elWidth } = useElementSize();
 
@@ -18,18 +20,14 @@ const I = () => {
         if (!elWidth) return;
         const { top, height } = ref.current.getBoundingClientRect();
         const y = top + height;
-        const topIntersectH = Math.ceil(
-            y / Math.cos((90 + R) * (Math.PI / 180))
-        );
+        const topIntersectH = Math.ceil(y / Math.cos(degreeToRadian(90 + R)));
         const rightIntersectH = Math.ceil(
-            windowWidth / Math.cos(R * (Math.PI / 180))
+            windowWidth / Math.cos(degreeToRadian(R))
         );
         const h = Math.min(topIntersectH, rightIntersectH);
-        if (elWidth < h) {
-            setStable(false);
-            setContent((prev) => prev.concat(TEXT));
-        } else setStable(true);
-    }, [windowWidth, elWidth, ref]);
+        if (elWidth < h) setContent((prev) => prev.concat(text));
+        else setStable(true);
+    }, [windowWidth, elWidth, ref, text]);
 
     const { size, fontFamily } = useMemo(() => {
         const multiplier = intInRange(2, 8);
@@ -46,14 +44,14 @@ const I = () => {
         return { duration, x };
     }, [elWidth]);
 
-    const animate = stable ? 'stable' : 'initial';
-
     const props = {
         style: {
             lineHeight: LINE_HEIGHT,
+            fontFamily: 'PP Neue Montreal',
+            transformOrigin: '0 100%',
         },
         className:
-            'text-web-red uppercase font-bold italic transition-opacity whitespace-nowrap tracking-tighter'
+            'text-web-red uppercase font-semibold italic transition-opacity whitespace-nowrap tracking-tighter will-change-transform select-none'
                 .concat(' ', size)
                 .concat(' ', fontFamily)
                 .concat(' ', stable ? 'opacity-100' : 'opacity-0'),
@@ -68,15 +66,7 @@ const I = () => {
                 repeat: Infinity,
                 ease: 'linear',
             },
-            // color: {
-            //     duration: 10,
-            //     repeat: Infinity,
-            //     repeatType: 'reverse',
-            //     ease: 'linear',
-            //     delay: i * 0.5,
-            // },
         },
-        // transformTemplate: (_, s) => s.concat(` rotateZ(${R}deg)`),
     };
 
     return (
@@ -88,21 +78,23 @@ const I = () => {
             }}
             key={content}
         >
-            <motion.div ref={ref} {...props}>
+            <motion.div ref={ref} {...props} key={content + 'i'}>
                 {content}
             </motion.div>
-            <motion.div {...props}>{content}</motion.div>
+            <motion.div {...props} key={content + 'j'}>
+                {content}
+            </motion.div>
         </div>
     );
 };
 
-const L = () => {
+const L = ({ text }) => {
     const [multiplier, setMultiplier] = useState(10);
     const { height: windowHeight, width: windowWidth } = useViewportSize();
     const { ref, height: listHeight } = useElementSize();
 
     useLayoutEffect(() => {
-        const t = windowWidth * Math.tan(-R * (Math.PI / 180));
+        const t = windowWidth * Math.tan(degreeToRadian(-R));
         const requiredHeight = windowHeight + t;
         if (listHeight < requiredHeight) setMultiplier((prev) => prev + 1);
     }, [listHeight, windowHeight, windowWidth]);
@@ -110,27 +102,14 @@ const L = () => {
     return (
         <div ref={ref}>
             {Array.from({ length: multiplier }).map((_, i) => (
-                <I key={i} i={i} />
+                <I key={i + text} i={i} text={text} />
             ))}
         </div>
     );
 };
 
-const Enter = () => {
-    return (
-        <div className="relative bg-white w-24 h-24 rounded-full shadow-2xl border-4 border-web-blue">
-            <a
-                href="https://mpq.dev"
-                className="absolute inset-0 flex items-center justify-center font-bold uppercase text-web-blue"
-            >
-                Enter
-            </a>
-        </div>
-    );
-};
-
 const Reroll = ({ reroll }) => (
-    <div className="relative flex items-center justify-center bg-white w-16 h-16 rounded-full shadow-2xl border-4 border-web-blue">
+    <div className="relative flex items-center justify-center w-16 h-16 bg-white border-4 rounded-full shadow-2xl border-web-blue">
         <button
             onClick={reroll}
             className="absolute inset-0 flex items-center justify-center font-bold uppercase text-web-blue"
@@ -158,14 +137,26 @@ const Reroll = ({ reroll }) => (
 
 const App = () => {
     const [k, setK] = useState(0);
+    const [text, setText] = useState(TEXT);
+    const { height: windowHeight } = useViewportSize();
+
     return (
-        <div key={k}>
-            <div className="fixed inset-0">
-                <L />
-            </div>
-            <div className="fixed inset-2 flex justify-between items-end">
+        <div className="fixed inset-0">
+            <L text={text} key={text + k} />
+            <div className="absolute flex items-end justify-center gap-4 inset-2">
                 <Reroll reroll={() => setK((k) => k + 1)} />
-                <Enter />
+                <input
+                    type="text"
+                    className="w-64 h-16 px-2 py-0 text-xl border-4 rounded-md border-web-blue"
+                    value={text}
+                    onChange={(e) =>
+                        startTransition(() => setText(e.target.value))
+                    }
+                    onBlur={() => {
+                        if (window.innerHeight < windowHeight)
+                            requestAnimationFrame(() => setK((k) => k + 1));
+                    }}
+                />
             </div>
         </div>
     );
