@@ -25,8 +25,10 @@ const I = ({ text }) => {
             windowWidth / Math.cos(degreeToRadian(R))
         );
         const h = Math.min(topIntersectH, rightIntersectH);
-        if (elWidth < h) setContent((prev) => prev.concat(text));
-        else setStable(true);
+        if (elWidth < h) {
+            setContent((prev) => prev.concat(text));
+            setStable(false);
+        } else setStable(true);
     }, [windowWidth, elWidth, ref, text]);
 
     const { size, fontFamily } = useMemo(() => {
