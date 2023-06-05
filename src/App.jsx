@@ -10,7 +10,7 @@ const degreeToRadian = (degrees) => degrees * (Math.PI / 180);
 const TEXT = 'MPQ';
 const LINE_HEIGHT = 0.8;
 const R = -15;
-const I = ({ text }) => {
+const I = ({ text = '' }) => {
     const [stable, setStable] = useState(false);
     const [content, setContent] = useState(text);
     const { width: windowWidth } = useViewportSize();
@@ -26,7 +26,8 @@ const I = ({ text }) => {
         );
         const h = Math.min(topIntersectH, rightIntersectH);
         if (elWidth < h) {
-            setContent((prev) => prev.concat(text));
+            const multiplier = Math.ceil(h / elWidth);
+            setContent((prev) => prev.concat(text.repeat(multiplier)));
             setStable(false);
         } else setStable(true);
     }, [windowWidth, elWidth, ref, text]);
@@ -39,7 +40,7 @@ const I = ({ text }) => {
     }, []);
 
     const { duration, x } = useMemo(() => {
-        const duration = intInRange(15, 30);
+        const duration = intInRange(20, 30);
         const x = [0, -elWidth];
         if (Math.random() > 0.5) x.reverse();
 
@@ -139,7 +140,10 @@ const Reroll = ({ reroll }) => (
 
 const App = () => {
     const [k, setK] = useState(0);
-    const [text, setText] = useState(TEXT);
+    const [text, setText] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('t') || TEXT;
+    });
     const { height: windowHeight } = useViewportSize();
 
     return (
@@ -151,7 +155,14 @@ const App = () => {
                     type="text"
                     className="w-64 h-16 px-2 py-0 text-xl border-4 rounded-md border-web-blue"
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                        window.history.replaceState(
+                            null,
+                            null,
+                            `?t=${e.target.value}`
+                        );
+                        setText(e.target.value);
+                    }}
                     onBlur={() => {
                         if (window.innerHeight < windowHeight)
                             requestAnimationFrame(() => setK((k) => k + 1));
