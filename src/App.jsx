@@ -10,7 +10,19 @@ const degreeToRadian = (degrees) => degrees * (Math.PI / 180);
 const TEXT = 'MPQ';
 const LINE_HEIGHT = 0.8;
 const R = -15;
-const I = ({ text = '' }) => {
+
+const RAINBOW = [
+    'text-red-500',
+    'text-orange-500',
+    'text-yellow-500',
+    'text-green-500',
+    'text-blue-500',
+    'text-indigo-500',
+    'text-purple-500',
+    'text-pink-500',
+];
+
+const I = ({ text = '', i }) => {
     const [stable, setStable] = useState(false);
     const [content, setContent] = useState(text);
     const { width: windowWidth } = useViewportSize();
@@ -54,10 +66,16 @@ const I = ({ text = '' }) => {
             transformOrigin: '0 100%',
         },
         className:
-            'text-web-red uppercase font-semibold italic transition-opacity whitespace-nowrap tracking-tighter will-change-transform select-none'
+            'uppercase font-semibold italic transition-opacity whitespace-nowrap tracking-tighter will-change-transform select-none'
                 .concat(' ', size)
                 .concat(' ', fontFamily)
-                .concat(' ', stable ? 'opacity-100' : 'opacity-0'),
+                .concat(' ', stable ? 'opacity-100' : 'opacity-0')
+                .concat(
+                    ' ',
+                    text.includes('rainbow')
+                        ? RAINBOW[i % RAINBOW.length]
+                        : 'text-web-red'
+                ),
         variants: {
             initial: {},
             stable: { x },
