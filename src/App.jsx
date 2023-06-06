@@ -72,7 +72,7 @@ const I = ({ text = '', i }) => {
                 .concat(' ', stable ? 'opacity-100' : 'opacity-0')
                 .concat(
                     ' ',
-                    text.includes('rainbow')
+                    text.toLowerCase().includes('rainbow')
                         ? RAINBOW[i % RAINBOW.length]
                         : 'text-web-red'
                 ),
